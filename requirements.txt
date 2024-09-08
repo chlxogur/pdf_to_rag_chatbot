@@ -1,4 +1,4 @@
 python = 3.10.14
-tabula
+tabula-py
 pypdf
 pandas = 2.2.2
