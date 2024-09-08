@@ -1,6 +1,8 @@
-1 3
+3 3
 
+samsung
 hyundai
+kepco
 
 연결 재무상태표
 연결 손익계산서
