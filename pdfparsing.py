@@ -253,5 +253,5 @@ with pd.ExcelWriter("data/output/2023.xlsx") as writer:
     df_csv["2023"]["연결 손익계산서"].to_excel(writer, sheet_name = "연결 손익계산서")
     df_csv["2023"]["연결 포괄손익계산서"].to_excel(writer, sheet_name = "연결 포괄손익계산서")
     
-with open("data/output/사업계획서_json.json", "w", encoding="UTF-8") as json_file:
+with open("data/output/사업계획서자손.json", "w", encoding="UTF-8") as json_file:
     json.dump(table_to_json(df_csv), json_file, indent=4, ensure_ascii=False)

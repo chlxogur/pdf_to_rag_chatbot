@@ -2,3 +2,8 @@ python = 3.10.14
 tabula-py
 pypdf
 pandas = 2.2.2
+langchain
+langchain-openai
+langchain_ollama
+scikit-learn
+chromadb
