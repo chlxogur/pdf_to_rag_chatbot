@@ -56,3 +56,7 @@ https://velog.io/@autorag/%EC%96%B4%EB%96%A4-%ED%95%9C%EA%B5%AD%EC%96%B4-%EC%9E%
 
 벡터의 유사도
 https://wikidocs.net/24603
+
+트리거 인텐트? 가 뭐야?
+
+각 llm이 쓰는 토큰계산기의 종류를 알 필요가 있다.

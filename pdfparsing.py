@@ -178,9 +178,14 @@ def extract_table(file_name, desired_table_name_list):
                 dfs[key].loc[idx, "과목"] = "_".join(parents)
                 text = text[next_cursor - 1:]           # 바로 앞에 줄바꿈 문자까지 포함하려고 -1 추가
     return dfs
-
-def process_financial_statements_by_statement(df, companies, statements):
+"""
+def process_financial_statements_by_statement(df):
     result = {}
+    statements = []
+    companies = df.keys()
+    for company in companies:
+        statements.extend(df[company].keys())
+    statements = list(set(statements))
     
     for statement in statements:
         for cols in [[0, 1], [0, 2], [0, 3]]:
@@ -224,6 +229,7 @@ def process_financial_statements_by_statement(df, companies, statements):
     
     return result
 
+
 def table_to_json(df):
     result = {}
     for year in df:
@@ -241,11 +247,37 @@ def table_to_json(df):
                 current["Value"] = dict(value)
     return result
 
+def table_to_json_2(df):
+    result = {}
+    for year in df:
+        df_of_this_year = df[year]
+        for title in df_of_this_year:
+            column_list = df[year][title].columns
+            for column in column_list:
+                key_count = 0
+                value = df[year][title][column]
+                splitted_column = column.split("_")
+                column_name = splitted_column[-1] + "_" + str(key_count)
+                ancestors = splitted_column[:-1]
+                while result.get(column_name) != None:
+                    key_count += 1
+                    column_name = splitted_column[-1] + "_" + str(key_count)
+                result[column_name] = {}
+                result[column_name]["Year"] = year
+                result[column_name]["Value"] = dict(value)
+                result[column_name]["Ancestors"] = ancestors
+    return result
+"""
+"""
+    테이블을 column_name 기준으로 오름차순 정렬해서 최대한 옆 문서에 나오도록
+    자연어로 나열해보자. 예) 삼성전자의 2023년 자산의 유동자산의 미수금은 --이다 이렇게
+"""
+def table_to_text(df):
+    pass
 
-df = {}
-file_names, desired_table_name_list = read_text_file()
-for file_name in file_names:
-    df[file_name] = extract_table(file_name, desired_table_name_list)
+
+
+"""    
 df_csv = process_financial_statements_by_statement(df, file_names, desired_table_name_list)
 
 with pd.ExcelWriter("data/output/2023.xlsx") as writer:
@@ -253,5 +285,6 @@ with pd.ExcelWriter("data/output/2023.xlsx") as writer:
     df_csv["2023"]["연결 손익계산서"].to_excel(writer, sheet_name = "연결 손익계산서")
     df_csv["2023"]["연결 포괄손익계산서"].to_excel(writer, sheet_name = "연결 포괄손익계산서")
     
-with open("data/output/사업계획서자손.json", "w", encoding="UTF-8") as json_file:
-    json.dump(table_to_json(df_csv), json_file, indent=4, ensure_ascii=False)
+with open("data/output/사업계획서자손2.json", "w", encoding="UTF-8") as json_file:
+    json.dump(table_to_json_2(df_csv), json_file, indent=4, ensure_ascii=False)
+"""

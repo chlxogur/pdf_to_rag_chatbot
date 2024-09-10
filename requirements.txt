@@ -6,4 +6,5 @@ langchain
 langchain-openai
 langchain_ollama
 scikit-learn
-chromadb
+langchain-chroma
+openpyxl
