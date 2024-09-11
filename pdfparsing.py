@@ -178,6 +178,106 @@ def extract_table(file_name, desired_table_name_list):
                 dfs[key].loc[idx, "과목"] = "_".join(parents)
                 text = text[next_cursor - 1:]           # 바로 앞에 줄바꿈 문자까지 포함하려고 -1 추가
     return dfs
+
+def extract_table_with_won_unit(file_name, desired_table_name_list):
+    if ".pdf" not in file_name:
+        file_name = file_name + ".pdf"
+
+    reader = PdfReader(f"data/{file_name}")
+
+    table_text_dic = {}             # key에 테이블 이름, value에 텍스트 쭉
+    for name in desired_table_name_list:
+        table_text_dic.update({name : get_text_of_chapter(reader, name)})
+        
+    table_range = []
+    for table_name in desired_table_name_list:
+        this_table_range = title_to_page_index(reader, table_name)
+        if this_table_range != -1:
+            table_range.extend([i for i in range(this_table_range["page_index"], this_table_range["page_index_of_next_chapter"] + 1)])
+    desired_page_index = list(set(table_range))
+    desired_page_number = [i + 1 for i in desired_page_index]       # 주의 : 다음 챕터의 시작 페이지까지 나옴
+
+    tabula_result_dfs = tabula.read_pdf(
+        f"data/{file_name}",
+        pages=desired_page_number,
+        stream=True,
+        lattice=True
+    )
+
+    dfs = {}
+    for idx in range(len(tabula_result_dfs)):           # 나눠진 테이블을 병합
+        for key in table_text_dic:
+            if table_text_dic[key] == -1:
+                dfs[key] = -1
+                continue
+            nextline_removed_text = table_text_dic[key].replace("\n", "\r")
+            if tabula_result_dfs[idx].iloc[:, 0].apply(lambda x : False if pd.isna(x) else x in nextline_removed_text).sum() == tabula_result_dfs[idx].shape[0]:
+                if dfs.get(key) is None:
+                    dfs[key] = tabula_result_dfs[idx]
+                else:
+                    if dfs[key].columns is not tabula_result_dfs[idx]:
+                        temp_df = pd.DataFrame(tabula_result_dfs[idx].columns, index = dfs[key].columns).T     # 내용이 컬럼으로 들어가 있는 부분을 추출
+                        dfs[key] = pd.concat([dfs[key], temp_df], ignore_index=True)
+                        tabula_result_dfs[idx].columns = dfs[key].columns
+                    dfs[key] = pd.concat([dfs[key], tabula_result_dfs[idx]], ignore_index=True)
+                    break
+                
+    for key in dfs:
+        text = table_text_dic[key]
+        parents = []
+        level = 0
+        new_column = ["과목"]
+        if isinstance(dfs[key], pd.DataFrame):
+            for column in dfs[key].columns[1:]:         # 제 몇 기 이렇게 나오는 컬럼을 년도로 통일
+                r = re.compile(rf"\n{column}.*[0-9]{{4}}[.][0-9]{{2}}[.][0-9]{{2}}.*\n")
+                new_column.append(r.search(text).group()[-14:-10])
+            dfs[key].columns = new_column
+            dfs[key].iloc[:, 1:] = dfs[key].iloc[:, 1:].replace({'\(': '-', '\)': '', ',': ''}, regex=True)
+            
+            for idx, row in dfs[key].iterrows():        # 내용 다듬기
+                row["과목"] = row["과목"].replace("\r", "\n")
+                
+                r = re.compile(f"\\n[ ]?\\u3000*{re.escape(row['과목'])}[^가-힣]*\\n")  # 됐다 ㅠㅠ
+                r_searched = r.search(text)
+                current_row_text = r_searched.group()
+                next_cursor = r_searched.end()
+
+                name_start = current_row_text.find(row["과목"])
+                current_level = current_row_text[:name_start].count("\u3000")
+                row["과목"] = row["과목"].replace("\n", "")     # 이제 \n을 없애고
+                dfs[key].iloc[idx, 1:] = dfs[key].iloc[idx, 1:].apply(pd.to_numeric, errors='coerce')
+                """
+                r = re.compile("\(단위[ ]?:[ ]?원\)")
+                matched = r.search(row["과목"])
+                if matched:
+                    dfs[key].iloc[idx, 1:] = dfs[key].iloc[idx, 1:].apply(pd.to_numeric, errors='coerce') / 1000000         # 단위가 원단위면 100만으로 나눠서 단위를 통일
+                    row["과목"] = row["과목"].replace(matched.group(), "").strip()                                          # (단위 : 원) 삭제
+                """
+                r = re.compile("\(주[ ]?[1-9].*\)")
+                matched = r.search(row["과목"])
+                if matched:
+                    row["과목"] = row["과목"].replace(matched.group(), "").strip()                                          # (주11) 이런거 삭제
+                if current_level == level:
+                    try:
+                        parents.pop()
+                    except IndexError:
+                        pass
+                    parents.append(row["과목"])
+                elif current_level > level:
+                    for i in range(level + 1, current_level + 1):           # 의미가 없는 반복문이긴 한데.. 예외가 있을 수 있으니 > 부등호+반복문으로 처리함
+                        parents.append(row["과목"])
+                    level = current_level
+                else:
+                    for i in range(current_level, level + 1):
+                        try:
+                            parents.pop()
+                        except IndexError:
+                            pass
+                    parents.append(row["과목"])
+                    level = current_level
+                dfs[key].loc[idx, "과목"] = "_".join(parents)
+                text = text[next_cursor - 1:]           # 바로 앞에 줄바꿈 문자까지 포함하려고 -1 추가
+    return dfs
 """
 def process_financial_statements_by_statement(df):
     result = {}

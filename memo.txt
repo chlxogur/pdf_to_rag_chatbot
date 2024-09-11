@@ -60,3 +60,9 @@ https://wikidocs.net/24603
 트리거 인텐트? 가 뭐야?
 
 각 llm이 쓰는 토큰계산기의 종류를 알 필요가 있다.
+
+openpyxl 사용법
+https://coding-kindergarten.tistory.com/75
+
+부장님 : 포맷을 여러가지를 만들어볼 수도 있겠다
+55기를 치면 55기만 나오도록 한다든지..
