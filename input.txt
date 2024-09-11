@@ -1,5 +1,3 @@
-3 3
-
 samsung
 hyundai
 kepco
@@ -7,3 +5,5 @@ kepco
 연결 재무상태표
 연결 손익계산서
 연결 포괄손익계산서
+
+0

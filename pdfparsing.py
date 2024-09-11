@@ -2,8 +2,7 @@ import tabula
 from pypdf import PdfReader
 import re
 import pandas as pd
-import numpy as np
-import json
+import os
 
 # 목차에서 검색해서 지금 챕터의 인덱스와 다음 챕터의 이름, 인덱스를 리턴, 못 찾았으면 -1을 리턴
 def title_to_page_index(reader, chapter_title):
@@ -58,27 +57,15 @@ def get_text_of_chapter(reader, chapter_title):
 # input.txt에서 원하는 pdf랑 원하는 표 이름 받아오기
 def read_text_file():
     with open("input.txt", 'r', encoding='utf-8') as file:
-        # 첫 번째 줄을 읽어서 숫자를 파싱
-        first_line = file.readline().strip()
-        num_files, num_items = map(int, first_line.split())
+        # 파일 전체 내용을 읽어서 '\n\n'으로 분리
+        content = file.read().strip().split('\n\n')
+
+        # 첫 번째 부분은 파일명, 두 번째 부분은 항목명으로 처리
+        file_names = content[0].split('\n')
+        items = content[1].split('\n')
+        years = content[2].split('\n')
         
-        file.readline()
-
-        # 파일명을 읽음
-        file_names = []
-        for i in range(num_files):
-            file_name = file.readline().strip()
-            file_names.append(file_name)
-            
-        file.readline()
-
-        # 항목명을 읽음
-        items = []
-        for i in range(num_items):
-            item = file.readline().strip()
-            items.append(item)
-
-        return file_names, items
+        return file_names, items, years
     
 def extract_table(file_name, desired_table_name_list):
     if ".pdf" not in file_name:
@@ -197,7 +184,7 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
     desired_page_index = list(set(table_range))
     desired_page_number = [i + 1 for i in desired_page_index]       # 주의 : 다음 챕터의 시작 페이지까지 나옴
 
-    tabula_result_dfs = tabula.read_pdf(
+    tabula_result_dfs = tabula.read_pdf(        
         f"data/{file_name}",
         pages=desired_page_number,
         stream=True,
