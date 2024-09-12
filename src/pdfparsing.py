@@ -4,6 +4,7 @@ import re
 import pandas as pd
 import os
 from src.config import DATA_PATH, OUTPUT_PATH
+import numpy as np
 
 # 목차에서 검색해서 지금 챕터의 인덱스와 다음 챕터의 이름, 인덱스를 리턴, 못 찾았으면 -1을 리턴
 def title_to_page_index(reader, chapter_title):
@@ -127,7 +128,7 @@ def extract_table(file_name, desired_table_name_list):
             dfs[key].iloc[:, 1:] = dfs[key].iloc[:, 1:].replace({'\(': '-', '\)': '', ',': ''}, regex=True)
             
             for idx, row in dfs[key].iterrows():        # 내용 다듬기
-                row["과목"] = row["과목"].replace("\r", "\n")
+                row["과목"] = row["과목"].replace("\r", "\n").strip()
                 
                 r = re.compile(f"\\n[ ]?\\u3000*{re.escape(row['과목'])}[^가-힣]*\\n")  # 됐다 ㅠㅠ
                 r_searched = r.search(text)
@@ -226,7 +227,7 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
             dfs[key].iloc[:, 1:] = dfs[key].iloc[:, 1:].replace({'\(': '-', '\)': '', ',': ''}, regex=True)
             
             for idx, row in dfs[key].iterrows():        # 내용 다듬기
-                row["과목"] = row["과목"].replace("\r", "\n")
+                row["과목"] = row["과목"].replace("\r", "\n").strip()
                 
                 r = re.compile(f"\\n[ ]?\\u3000*{re.escape(row['과목'])}[^가-힣]*\\n")  # 됐다 ㅠㅠ
                 r_searched = r.search(text)
@@ -321,10 +322,13 @@ def table_to_dic(df, target_year=False):
                     cursor[company_name] = dict(value)
                     cursor.update(calculate_yearly_sum_and_average(cursor))     # 추가
                     
-    
     return result
 
+
+
 """
+아래는 버린 소스들... 나중에 쓸지 모르니 남겨둠
+
 def process_financial_statements_by_statement(df):
     result = {}
     statements = []
@@ -413,17 +417,7 @@ def table_to_json_2(df):
                 result[column_name]["Value"] = dict(value)
                 result[column_name]["Ancestors"] = ancestors
     return result
-"""
-"""
-    테이블을 column_name 기준으로 오름차순 정렬해서 최대한 옆 문서에 나오도록
-    자연어로 나열해보자. 예) 삼성전자의 2023년 자산의 유동자산의 미수금은 --이다 이렇게
-"""
-def table_to_text(df):
-    pass
-
-
-
-"""    
+ 
 df_csv = process_financial_statements_by_statement(df, file_names, desired_table_name_list)
 
 with pd.ExcelWriter(OUTPUT_PATH + "2023.xlsx") as writer:

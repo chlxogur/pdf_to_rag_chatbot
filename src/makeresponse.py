@@ -11,6 +11,10 @@ load_dotenv()
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
+
+### DB없으면 임베딩하는 함수 여기 넣기###
+
+
 def load_db():
     text_embedding_model = OpenAIEmbeddings()
     db = Chroma(

@@ -85,9 +85,6 @@ def make_table():
                 if isinstance(value, dict) and key != "Value":
                     dfsearch_stack.append((value, current_path))
                 else:
-                    # 회사 컬럼 추가하는 작업
-                    #value.update(calculate_yearly_sum_and_average(value))      # 여기 안넣어도 되나?
-
                     left_index = 1
                     for path_node in current_path[:-1]:                                 # 과목명을 다중컬럼으로 입력
                         cell = worksheet.cell(row = current_row, column=left_index, value = path_node)
@@ -105,7 +102,7 @@ def make_table():
             for col in range(max_depth + 1, worksheet.max_column + 1):
                 cell = worksheet.cell(row=row, column=col)
                 
-                if cell.value is None or str(cell.value).strip() == '':
+                if np.isnan(cell.value) or cell.value is None or str(cell.value).strip() == '':
                     cell.value = '-'
                     cell.alignment = Alignment(horizontal="right")
                     
