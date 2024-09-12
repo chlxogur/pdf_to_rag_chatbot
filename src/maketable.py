@@ -1,60 +1,11 @@
-from pdfparsing import read_text_file, extract_table_with_won_unit
+from src.pdfparsing import read_text_file, extract_table_with_won_unit, table_to_dic
 import pandas as pd
+import numpy as np
 from openpyxl import Workbook
 from openpyxl.styles import Border, Side, Alignment, PatternFill
 from openpyxl.styles import Alignment
 from collections import deque
-
-def calculate_yearly_sum_and_average(data):
-    year_totals = {}  # 연도별 합계를 저장할 딕셔너리
-    year_counts = {}  # 연도별 항목 개수를 저장할 딕셔너리
-
-    # 각 회사 데이터를 순회
-    for company, years_data in data.items():
-        for year, value in years_data.items():
-            # 연도가 딕셔너리에 없으면 초기화
-            if year not in year_totals:
-                year_totals[year] = 0
-                year_counts[year] = 0
-
-            # 연도별 합계와 카운트 업데이트
-            year_totals[year] += value
-            year_counts[year] += 1
-
-    # 연도별 합계와 평균 계산하여 리턴 형식 맞춤
-    result = {'sum': {}, 'average': {}}
-    for year in year_totals:
-        total = year_totals[year]
-        count = year_counts[year]
-        average = total / count if count > 0 else 0
-        result['sum'][year] = total
-        result['average'][year] = average
-
-    return result
-
-def table_to_dic(df, target_year=False):
-    result = {}
-    for company_name in df.keys():
-        this_company = df[company_name]
-        for document_name in this_company.keys():
-            current_df = df[company_name][document_name]
-            if isinstance(current_df, pd.DataFrame):
-                for idx, row in current_df.iterrows():
-                    ancestors = row["과목"].split("_")
-                    hierarchy = [document_name] + ancestors + ["Value"]
-                    cursor = result
-                    if target_year == False:
-                        value = row[1:]
-                    else:
-                        value = row.loc[target_year]
-                    for key in hierarchy:
-                        if key not in cursor:
-                            cursor[key] = {}
-                        cursor = cursor[key]
-                    cursor[company_name] = dict(value)
-                    
-    
-    return result
+from src.config import OUTPUT_PATH
 
 def make_column(df, table_name, worksheet, max_depth, target_year = False):
     company_dic = {}
@@ -85,7 +36,7 @@ def make_column(df, table_name, worksheet, max_depth, target_year = False):
                 cell.alignment = Alignment(horizontal="center")
                 cell.fill = PatternFill(fgColor = "C0C0C0", fill_type="solid")
     
-    for company in ["sum", "average"]:        # 여기부터 기록 시작
+    for company in ["sum", "average"]:          # 합계랑 평균
         if company_dic.get(company) is None:                    
                 company_dic[company] = {
                     "left":rightmost_column_number + 1
@@ -104,14 +55,12 @@ def make_column(df, table_name, worksheet, max_depth, target_year = False):
     return worksheet, company_dic
 
 def make_table():
-    CONTENT_START_ROW = 4
+    CONTENT_START_ROW = 4           # 엑셀 형식에따라
     df = {}
     file_names, desired_table_name_list, target_year = read_text_file()
     for file_name in file_names:
         df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list)
         
-    if target_year[0] == "0":
-        target_year = False
     data = table_to_dic(df, target_year)
         
     for table_name in data.keys():
@@ -137,7 +86,7 @@ def make_table():
                     dfsearch_stack.append((value, current_path))
                 else:
                     # 회사 컬럼 추가하는 작업
-                    value.update(calculate_yearly_sum_and_average(value))
+                    #value.update(calculate_yearly_sum_and_average(value))      # 여기 안넣어도 되나?
 
                     left_index = 1
                     for path_node in current_path[:-1]:                                 # 과목명을 다중컬럼으로 입력
@@ -155,6 +104,7 @@ def make_table():
         for row in range(4, worksheet.max_row + 1):
             for col in range(max_depth + 1, worksheet.max_column + 1):
                 cell = worksheet.cell(row=row, column=col)
+                
                 if cell.value is None or str(cell.value).strip() == '':
                     cell.value = '-'
                     cell.alignment = Alignment(horizontal="right")
@@ -195,4 +145,4 @@ def make_table():
             worksheet.column_dimensions[column].width = adjusted_width
         worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=max_depth)
         worksheet.merge_cells(start_row=2, start_column=1, end_row=2, end_column=max_depth)
-        workbook.save(f"data/output/{table_name}.xlsx")    
+        workbook.save(OUTPUT_PATH + f"{table_name}.xlsx")    

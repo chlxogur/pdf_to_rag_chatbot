@@ -3,6 +3,7 @@ from pypdf import PdfReader
 import re
 import pandas as pd
 import os
+from src.config import DATA_PATH, OUTPUT_PATH
 
 # 목차에서 검색해서 지금 챕터의 인덱스와 다음 챕터의 이름, 인덱스를 리턴, 못 찾았으면 -1을 리턴
 def title_to_page_index(reader, chapter_title):
@@ -63,7 +64,10 @@ def read_text_file():
         # 첫 번째 부분은 파일명, 두 번째 부분은 항목명으로 처리
         file_names = content[0].split('\n')
         items = content[1].split('\n')
-        years = content[2].split('\n')
+        if len(content) > 2:
+            years = content[2].split('\n')
+        else:
+            years = False
         
         return file_names, items, years
     
@@ -71,7 +75,7 @@ def extract_table(file_name, desired_table_name_list):
     if ".pdf" not in file_name:
         file_name = file_name + ".pdf"
 
-    reader = PdfReader(f"data/{file_name}")
+    reader = PdfReader(DATA_PATH + f"{file_name}")
 
     table_text_dic = {}             # key에 테이블 이름, value에 텍스트 쭉
     for name in desired_table_name_list:
@@ -86,7 +90,7 @@ def extract_table(file_name, desired_table_name_list):
     desired_page_number = [i + 1 for i in desired_page_index]       # 주의 : 다음 챕터의 시작 페이지까지 나옴
 
     tabula_result_dfs = tabula.read_pdf(
-        f"data/{file_name}",
+        DATA_PATH + f"{file_name}",
         pages=desired_page_number,
         stream=True,
         lattice=True
@@ -170,7 +174,7 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
     if ".pdf" not in file_name:
         file_name = file_name + ".pdf"
 
-    reader = PdfReader(f"data/{file_name}")
+    reader = PdfReader(DATA_PATH + f"{file_name}")
 
     table_text_dic = {}             # key에 테이블 이름, value에 텍스트 쭉
     for name in desired_table_name_list:
@@ -185,7 +189,7 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
     desired_page_number = [i + 1 for i in desired_page_index]       # 주의 : 다음 챕터의 시작 페이지까지 나옴
 
     tabula_result_dfs = tabula.read_pdf(        
-        f"data/{file_name}",
+        DATA_PATH + f"{file_name}",
         pages=desired_page_number,
         stream=True,
         lattice=True
@@ -265,6 +269,61 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
                 dfs[key].loc[idx, "과목"] = "_".join(parents)
                 text = text[next_cursor - 1:]           # 바로 앞에 줄바꿈 문자까지 포함하려고 -1 추가
     return dfs
+
+def calculate_yearly_sum_and_average(data):
+    year_totals = {}  # 연도별 합계를 저장할 딕셔너리
+    year_counts = {}  # 연도별 항목 개수를 저장할 딕셔너리
+
+    # 각 회사 데이터를 순회
+    for company, years_data in data.items():
+        if company == "sum" or company == "average":            # 합계와 평균을 두번 계산하지 않도록
+            continue
+        for year, value in years_data.items():
+            # 연도가 딕셔너리에 없으면 초기화
+            if year not in year_totals:
+                year_totals[year] = 0
+                year_counts[year] = 0
+
+            # 연도별 합계와 카운트 업데이트
+            year_totals[year] += value
+            year_counts[year] += 1
+
+    # 연도별 합계와 평균 계산하여 리턴 형식 맞춤
+    result = {'sum': {}, 'average': {}}
+    for year in year_totals:
+        total = year_totals[year]
+        count = year_counts[year]
+        average = total / count if count > 0 else 0
+        result['sum'][year] = total
+        result['average'][year] = average
+
+    return result
+
+def table_to_dic(df, target_year=False):
+    result = {}
+    for company_name in df.keys():
+        this_company = df[company_name]
+        for document_name in this_company.keys():
+            current_df = df[company_name][document_name]
+            if isinstance(current_df, pd.DataFrame):
+                for idx, row in current_df.iterrows():
+                    ancestors = row["과목"].split("_")
+                    hierarchy = [document_name] + ancestors + ["Value"]
+                    cursor = result
+                    if target_year == False:
+                        value = row[1:]
+                    else:
+                        value = row.loc[row.reindex(target_year).dropna().index]
+                    for key in hierarchy:
+                        if key not in cursor:
+                            cursor[key] = {}
+                        cursor = cursor[key]
+                    cursor[company_name] = dict(value)
+                    cursor.update(calculate_yearly_sum_and_average(cursor))     # 추가
+                    
+    
+    return result
+
 """
 def process_financial_statements_by_statement(df):
     result = {}
@@ -367,11 +426,11 @@ def table_to_text(df):
 """    
 df_csv = process_financial_statements_by_statement(df, file_names, desired_table_name_list)
 
-with pd.ExcelWriter("data/output/2023.xlsx") as writer:
+with pd.ExcelWriter(OUTPUT_PATH + "2023.xlsx") as writer:
     df_csv["2023"]["연결 재무상태표"].to_excel(writer, sheet_name = "연결 재무상태표")
     df_csv["2023"]["연결 손익계산서"].to_excel(writer, sheet_name = "연결 손익계산서")
     df_csv["2023"]["연결 포괄손익계산서"].to_excel(writer, sheet_name = "연결 포괄손익계산서")
     
-with open("data/output/사업계획서자손2.json", "w", encoding="UTF-8") as json_file:
+with open(OUTPUT_PATH + "사업계획서자손2.json", "w", encoding="UTF-8") as json_file:
     json.dump(table_to_json_2(df_csv), json_file, indent=4, ensure_ascii=False)
 """
