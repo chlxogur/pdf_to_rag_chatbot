@@ -18,7 +18,7 @@ def format_docs(docs):
 def load_db():
     text_embedding_model = OpenAIEmbeddings()
     db = Chroma(
-        collection_name="saup",
+        collection_name="saup_text",
         persist_directory= OUTPUT_PATH + "chromadb",
         embedding_function=text_embedding_model
     )
@@ -26,8 +26,8 @@ def load_db():
 
 def make_response(db, query):
     retriever = db.as_retriever(
-        search_type = "similarity_score_threshold",
-        search_kwargs={"k": 20, "score_threshold":0.7}
+        search_type = "mmr",
+        search_kwargs={"k": 10, "fetch_k": 30}      # 아 이거 힘드네...
     )
     docs = retriever.invoke(query)
         
