@@ -1,10 +1,5 @@
 python = 3.10.14
-tabula-py
-pypdf
-pandas = 2.2.2
-langchain
-langchain-openai
-langchain_ollama
-scikit-learn
-langchain-chroma
-openpyxl
+
+pip install -U ipykernel pandas==2.2.2 tabula-py pypdf langchain langchain-chroma langchain-openai scikit-learn openpyxl streamlit Jpype1
+
+java 설치돼있어야 함.

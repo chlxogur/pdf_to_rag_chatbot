@@ -102,7 +102,7 @@ def make_table():
             for col in range(max_depth + 1, worksheet.max_column + 1):
                 cell = worksheet.cell(row=row, column=col)
                 
-                if np.isnan(cell.value) or cell.value is None or str(cell.value).strip() == '':
+                if cell.value is None or np.isnan(cell.value) or str(cell.value).strip() == '':
                     cell.value = '-'
                     cell.alignment = Alignment(horizontal="right")
                     
