@@ -66,3 +66,6 @@ https://coding-kindergarten.tistory.com/75
 
 부장님 : 포맷을 여러가지를 만들어볼 수도 있겠다
 55기를 치면 55기만 나오도록 한다든지..
+
+MarkdownHeaderTextSplitter 이게뭐지? 마크다운 형식으로 나눌 수 있어서 좋아보이는데 한번 해보자.
+https://wikidocs.net/234005
