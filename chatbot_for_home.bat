@@ -1,3 +1,3 @@
 call D:\Programs\anaconda3\Scripts\activate.bat D:\Programs\anaconda3
 call conda activate pdftorag
-streamlit run output.py
+streamlit run app.py
