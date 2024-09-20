@@ -3,27 +3,12 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from src.config import OUTPUT_PATH
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def format_docs(docs):
     return "\n\n".join("\n".join([str(doc.metadata), doc.page_content]) for doc in docs)
-
-
-### DB없으면 임베딩하는 함수 여기 넣기###
-# 임베딩 함수를 load_db() 안에 집어넣으면 해결될지도...
-
-
-def load_db():
-    text_embedding_model = OpenAIEmbeddings()
-    db = Chroma(
-        collection_name="saup_markdown",
-        persist_directory= OUTPUT_PATH + "chromadb",
-        embedding_function=text_embedding_model
-    )
-    return db
 
 def make_response(db, query):
     retriever = db.as_retriever(
