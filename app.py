@@ -1,5 +1,6 @@
 import streamlit as st
-from src.makeresponse import load_db, make_response
+from src.makeresponse import make_response
+from src.managedb import load_db
 
 st.title("표를 아는 챗봇")
 
