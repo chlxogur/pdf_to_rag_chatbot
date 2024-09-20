@@ -1,4 +1,4 @@
-from langchain_chroma import Chroma
+from langchain.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
