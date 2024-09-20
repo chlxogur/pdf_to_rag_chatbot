@@ -19,7 +19,8 @@ def load_db():
     text_embedding_model = OpenAIEmbeddings()
     db = Chroma(
         collection_name="saup_markdown",
-        persist_directory= OUTPUT_PATH + "chromadb",
+        persist_directory= "data/output/" + "chromadb",
+        #persist_directory= OUTPUT_PATH + "chromadb",
         embedding_function=text_embedding_model
     )
     return db
