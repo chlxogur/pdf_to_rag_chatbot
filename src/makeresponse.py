@@ -13,14 +13,14 @@ def format_docs(docs):
 
 
 ### DB없으면 임베딩하는 함수 여기 넣기###
+# 임베딩 함수를 load_db() 안에 집어넣으면 해결될지도...
 
 
 def load_db():
     text_embedding_model = OpenAIEmbeddings()
     db = Chroma(
         collection_name="saup_markdown",
-        persist_directory= "data/output/" + "chromadb",
-        #persist_directory= OUTPUT_PATH + "chromadb",
+        persist_directory= OUTPUT_PATH + "chromadb",
         embedding_function=text_embedding_model
     )
     return db
