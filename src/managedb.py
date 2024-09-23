@@ -1,7 +1,6 @@
 from src.pdfparsing import read_text_file, extract_table_with_won_unit, table_to_dic
 from collections import deque
 from langchain_core.documents import Document
-#from langchain_chroma import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
@@ -46,38 +45,13 @@ def make_db():
                             markdown_docs.append(document)
                             
     text_embedding_model = OpenAIEmbeddings()
-    """
-    db = Chroma.from_documents(
-        markdown_docs,
-        text_embedding_model,
-        collection_name = COLLECTION_NAME,
-        persist_directory = OUTPUT_PATH + "chromadb",
-        collection_metadata = {"hnsw:space":"cosine"}       # 이거 뭘까 공부할 필요가 있음
-    )
-    """
     db = FAISS.from_documents(documents = markdown_docs, embedding = text_embedding_model)
     db.save_local(folder_path=OUTPUT_PATH+"faissdb", index_name=COLLECTION_NAME)
 
     return db
 
 def load_db():
-    """
-    # 임베딩 함수를 load_db() 안에 집어넣으면 해결될지도...
-    text_embedding_model = OpenAIEmbeddings()
-    vectorstore = Chroma(embedding_function=text_embedding_model, persist_directory= "data/output/" + "chromadb")
-    client = vectorstore._client
-    collections = client.list_collections()
-    target_collection_name = COLLECTION_NAME
-    collection_exists = any(collection.name == target_collection_name for collection in collections)
-    if collection_exists:
-        db = Chroma(
-            collection_name="saup_markdown",
-            persist_directory= OUTPUT_PATH + "chromadb",
-            embedding_function=text_embedding_model
-        )
-    else:
-        db = make_db()
-    """
+
     if os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".faiss") and os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".pkl"):
         db = FAISS.load_local(
             folder_path=OUTPUT_PATH+"faissdb",

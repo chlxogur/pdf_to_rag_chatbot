@@ -11,7 +11,7 @@ def format_docs(docs):
 def make_response(db, query):
     retriever = db.as_retriever(
         search_type = "similarity_score_threshold",
-        search_kwargs={"k": 20,
+        search_kwargs={"k": 15,
                        "score_threshold":0.75}      # 아 이거 힘드네...
     )
     docs = retriever.invoke(query)
