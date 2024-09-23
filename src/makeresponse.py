@@ -12,7 +12,7 @@ def make_response(db, query):
     retriever = db.as_retriever(
         search_type = "similarity_score_threshold",
         search_kwargs={"k": 20,
-                       "score_threshold":0.8}      # 아 이거 힘드네...
+                       "score_threshold":0.7}      # 아 이거 힘드네...
     )
     docs = retriever.invoke(query)
         
