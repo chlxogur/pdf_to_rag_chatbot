@@ -51,22 +51,13 @@ def make_db():
     return db
 
 def load_db():
-    db = FAISS.load_local(
-        folder_path=OUTPUT_PATH+"faissdb",
-        index_name=COLLECTION_NAME,
-        embeddings=OpenAIEmbeddings(),
-        allow_dangerous_deserialization=True
-        )
-    """
-    if os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".faiss") and os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".pkl"):
+    try:
         db = FAISS.load_local(
-        folder_path=OUTPUT_PATH+"faissdb",
-        index_name=COLLECTION_NAME,
-        embeddings=OpenAIEmbeddings(),
-        allow_dangerous_deserialization=True
-        )
-    
-    else:
+            folder_path=OUTPUT_PATH+"faissdb",
+            index_name=COLLECTION_NAME,
+            embeddings=OpenAIEmbeddings(),
+            allow_dangerous_deserialization=True
+            )
+    except RuntimeError:            # DB가 없으면 새로 만듦.
         db = make_db()
-    """
     return db
