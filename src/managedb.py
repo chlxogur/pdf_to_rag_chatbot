@@ -53,6 +53,7 @@ def make_db():
 def load_db():
 
     if os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".faiss") and os.path.exists(OUTPUT_PATH+"faissdb\\"+COLLECTION_NAME+".pkl"):
+        print(COLLECTION_NAME + "DB exists")
         db = FAISS.load_local(
             folder_path=OUTPUT_PATH+"faissdb",
             index_name=COLLECTION_NAME,
@@ -60,5 +61,6 @@ def load_db():
             allow_dangerous_deserialization=True
         )
     else:
+        print("DB doesn't exist")
         db = make_db()
     return db
