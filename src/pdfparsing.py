@@ -54,22 +54,6 @@ def get_text_of_chapter(reader, chapter_title):
     end = r.search(text).start()
     return text[start:end]
 
-# input.txt에서 원하는 pdf랑 원하는 표 이름 받아오기
-def read_text_file():
-    with open("input.txt", 'r', encoding='utf-8') as file:
-        # 파일 전체 내용을 읽어서 '\n\n'으로 분리
-        content = file.read().strip().split('\n\n')
-
-        # 첫 번째 부분은 파일명, 두 번째 부분은 항목명으로 처리
-        file_names = content[0].split('\n')
-        items = content[1].split('\n')
-        if len(content) > 2:
-            years = content[2].split('\n')
-        else:
-            years = False
-        
-        return file_names, items, years
-    
 def extract_table_with_won_unit(file_name, desired_table_name_list):
     if ".pdf" not in file_name:
         file_name = file_name + ".pdf"

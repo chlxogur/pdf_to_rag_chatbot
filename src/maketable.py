@@ -1,4 +1,5 @@
-from src.pdfparsing import read_text_file, extract_table_with_won_unit, table_to_dic
+from src.pdfparsing import extract_table_with_won_unit, table_to_dic
+from src.fileio import read_text_file
 import pandas as pd
 import numpy as np
 from openpyxl import Workbook
