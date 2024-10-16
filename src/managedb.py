@@ -4,7 +4,6 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
-import os
 from src.config import OUTPUT_PATH, COLLECTION_NAME
 
 def make_db():

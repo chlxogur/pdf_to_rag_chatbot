@@ -6,17 +6,44 @@ from src.fileio import save_uploaded_files
 from src.maketable import make_table
 from src.config import OUTPUT_PATH
 
-def update_db():
-    make_table()
-    st.session_state.messages = []
-    st.session_state.db = make_db()
-    file_paths = [
+file_paths = [
         os.path.join(OUTPUT_PATH, "연결 재무상태표.xlsx"),
         os.path.join(OUTPUT_PATH, "연결 손익계산서.xlsx"),
         os.path.join(OUTPUT_PATH, "연결 포괄손익계산서.xlsx")
     ]
-    for file_path in file_paths:
-        if os.path.exists(file_path):
+
+col = list()
+def update_db():
+    make_table()
+    st.session_state.messages = []
+    st.session_state.db = make_db()
+
+st.title("표를 아는 챗봇")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+    st.session_state.db = load_db()
+    st.session_state.file_names = []
+    st.session_state.file_db_matched = True
+
+uploaded_files = st.file_uploader("PDF 파일 업로드", type="pdf", accept_multiple_files=True)
+
+if uploaded_files:
+    # 파일명을 출력
+    file_names = save_uploaded_files(uploaded_files)
+    if st.session_state.file_names != file_names:
+        st.session_state.file_names = file_names
+        st.session_state.file_db_matched = False
+
+if st.button("DB 새로고침"):
+    update_db()
+    st.session_state.file_db_matched = True
+
+col[0:2] = st.columns(3)
+    
+for idx, file_path in enumerate(file_paths):
+    with col[idx]:
+        if os.path.exists(file_path) and st.session_state.file_db_matched == True:
             # 파일명 추출
             file_name = os.path.basename(file_path)
 
@@ -28,23 +55,6 @@ def update_db():
                     file_name=file_name,
                     mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
                 )
-        else:
-            st.write(f"File {file_path} does not exist.")
-
-st.title("표를 아는 챗봇")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-    st.session_state.db = load_db()
-
-uploaded_files = st.file_uploader("PDF 파일 업로드", type="pdf", accept_multiple_files=True)
-
-if uploaded_files:
-    # 파일명을 출력
-    file_names = save_uploaded_files(uploaded_files)
-
-if st.button("DB 새로고침"):
-    update_db()
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
