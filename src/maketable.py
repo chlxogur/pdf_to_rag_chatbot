@@ -6,7 +6,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Border, Side, Alignment, PatternFill
 from openpyxl.styles import Alignment
 from collections import deque
-from src.config import OUTPUT_PATH
+from src.config import DATA_PATH, OUTPUT_PATH
+import os
 
 def make_column(df, table_name, worksheet, max_depth, target_year = False):
     company_dic = {}
@@ -55,13 +56,14 @@ def make_column(df, table_name, worksheet, max_depth, target_year = False):
                 cell.fill = PatternFill(fgColor = "C0C0C0", fill_type="solid")
     return worksheet, company_dic
 
-def make_table():
+def make_table(session_id = "initial"):
     CONTENT_START_ROW = 4           # 엑셀 형식에따라
     df = {}
     result_files = []
-    file_names, desired_table_name_list, target_year = read_text_file()
+    
+    file_names, desired_table_name_list, target_year = read_text_file(session_id)
     for file_name in file_names:
-        df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list)
+        df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list, session_id)
         
     data = table_to_dic(df, target_year)
         
@@ -144,11 +146,11 @@ def make_table():
             worksheet.column_dimensions[column].width = adjusted_width
         worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=max_depth)
         worksheet.merge_cells(start_row=2, start_column=1, end_row=2, end_column=max_depth)
-        workbook.save(OUTPUT_PATH + f"{table_name}.xlsx")
-        """
+        workbook.save(os.path.join(DATA_PATH, session_id, "output", f"{table_name}.xlsx"))
+        
         result_files.append({
             "name" : f"{table_name}.xlsx",
             "workbook" : workbook
         })
     return result_files
-    """
+    

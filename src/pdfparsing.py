@@ -3,6 +3,7 @@ from pypdf import PdfReader
 import re
 import pandas as pd
 from src.config import DATA_PATH
+import os
 
 # 목차에서 검색해서 지금 챕터의 인덱스와 다음 챕터의 이름, 인덱스를 리턴, 못 찾았으면 -1을 리턴
 def title_to_page_index(reader, chapter_title):
@@ -54,11 +55,11 @@ def get_text_of_chapter(reader, chapter_title):
     end = r.search(text).start()
     return text[start:end]
 
-def extract_table_with_won_unit(file_name, desired_table_name_list):
+def extract_table_with_won_unit(file_name, desired_table_name_list, session_id = "initial"):
     if ".pdf" not in file_name:
         file_name = file_name + ".pdf"
-
-    reader = PdfReader(DATA_PATH + f"{file_name}")
+        
+    reader = PdfReader(os.path.join(DATA_PATH, session_id, f"{file_name}"))
 
     table_text_dic = {}             # key에 테이블 이름, value에 텍스트 쭉
     for name in desired_table_name_list:
@@ -73,7 +74,7 @@ def extract_table_with_won_unit(file_name, desired_table_name_list):
     desired_page_number = [i + 1 for i in desired_page_index]       # 주의 : 다음 챕터의 시작 페이지까지 나옴
 
     tabula_result_dfs = tabula.read_pdf(        
-        DATA_PATH + f"{file_name}",
+        os.path.join(DATA_PATH, session_id, f"{file_name}"),
         pages=desired_page_number,
         stream=True,
         lattice=True

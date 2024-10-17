@@ -5,13 +5,14 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 import numpy as np
-from src.config import OUTPUT_PATH, COLLECTION_NAME
+from src.config import DATA_PATH, COLLECTION_NAME
+import os
 
-def make_db():
+def make_db(session_id = "initial"):
     df = {}
-    file_names, desired_table_name_list, target_year = read_text_file()
+    file_names, desired_table_name_list, target_year = read_text_file(session_id)
     for file_name in file_names:
-        df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list)
+        df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list, session_id)
         
     data_dic = table_to_dic(df, target_year)
 
@@ -46,18 +47,18 @@ def make_db():
                             
     text_embedding_model = OpenAIEmbeddings()
     db = FAISS.from_documents(documents = markdown_docs, embedding = text_embedding_model)
-    db.save_local(folder_path=OUTPUT_PATH+"faissdb", index_name=COLLECTION_NAME)
+    db.save_local(folder_path=os.path.join(DATA_PATH, session_id, "output", "faissdb"), index_name=COLLECTION_NAME)
 
     return db
 
-def load_db():
+def load_db(session_id = "initial"):
     try:
         db = FAISS.load_local(
-            folder_path=OUTPUT_PATH+"faissdb",
+            folder_path=os.path.join(DATA_PATH, session_id, "output", "faissdb"),
             index_name=COLLECTION_NAME,
             embeddings=OpenAIEmbeddings(),
             allow_dangerous_deserialization=True
             )
     except RuntimeError:            # DB가 없으면 새로 만듦.
-        db = make_db()
+        db = make_db(session_id)
     return db
