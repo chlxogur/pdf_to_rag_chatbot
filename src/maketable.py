@@ -58,6 +58,7 @@ def make_column(df, table_name, worksheet, max_depth, target_year = False):
 def make_table():
     CONTENT_START_ROW = 4           # 엑셀 형식에따라
     df = {}
+    result_files = []
     file_names, desired_table_name_list, target_year = read_text_file()
     for file_name in file_names:
         df[file_name] = extract_table_with_won_unit(file_name, desired_table_name_list)
@@ -143,4 +144,11 @@ def make_table():
             worksheet.column_dimensions[column].width = adjusted_width
         worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=max_depth)
         worksheet.merge_cells(start_row=2, start_column=1, end_row=2, end_column=max_depth)
-        workbook.save(OUTPUT_PATH + f"{table_name}.xlsx")    
+        workbook.save(OUTPUT_PATH + f"{table_name}.xlsx")
+        """
+        result_files.append({
+            "name" : f"{table_name}.xlsx",
+            "workbook" : workbook
+        })
+    return result_files
+    """
