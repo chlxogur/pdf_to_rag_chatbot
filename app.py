@@ -2,15 +2,14 @@ import streamlit as st
 import os
 from src.makeresponse import make_response
 from src.managedb import load_db, make_db
-from src.fileio import save_uploaded_files
+from src.fileio import read_text_file, save_uploaded_files
 from src.maketable import make_table
 from src.config import DATA_PATH
 import uuid
 import shutil
 import time
 
-default_file_names = ["연결 재무상태표.xlsx", "연결 손익계산서.xlsx", "연결 포괄손익계산서.xlsx"]
-OLD_FOLDER_LIFETIME = 60 * 6   # 변경된지 6시간이 지나면 폴더 삭제
+OLD_FOLDER_LIFETIME = 60 * 60 * 6       # 변경된지 6시간이 지나면 폴더 삭제
 
 col = list()
 def update_db(session_id = "initial"):
@@ -30,14 +29,17 @@ cleanup_old_folders()
 st.title("표를 아는 챗봇")
 
 if "session_id" not in st.session_state:
+    _, items, _  = read_text_file("initial")
     session_id = str(uuid.uuid4())
     if session_id in os.listdir(DATA_PATH):
         shutil.rmtree(os.path.join(DATA_PATH, session_id))
     shutil.copytree(os.path.join(DATA_PATH, "initial"), os.path.join(DATA_PATH, session_id))
+    os.mkdir(os.path.join(DATA_PATH, session_id, "dummy"))
+    os.rmdir(os.path.join(DATA_PATH, session_id, "dummy"))
     st.session_state.session_id = session_id
     st.session_state.messages = []
     st.session_state.db = load_db(st.session_state.session_id)
-    st.session_state.file_names = [default_file_names]
+    st.session_state.items_name = items
     st.session_state.file_db_matched = True
 
 uploaded_files = st.file_uploader("PDF 파일 업로드", type="pdf", accept_multiple_files=True)
@@ -55,15 +57,17 @@ if st.button("DB 새로고침"):
 
 col[0:2] = st.columns(3)
     
-for idx, file_name in enumerate(default_file_names):
-    file_path = os.path.join(DATA_PATH, st.session_state.session_id, "output", file_name)
+for idx, item_name in enumerate(st.session_state.items_name):
+    if not os.path.splitext(item_name)[1]:
+        item_name_with_xlsx = item_name + ".xlsx"
+    item_path = os.path.join(DATA_PATH, st.session_state.session_id, "output", item_name_with_xlsx)
     with col[idx]:
-        if os.path.exists(file_path) and st.session_state.file_db_matched == True:
+        if os.path.exists(item_path) and st.session_state.file_db_matched == True:
             # 파일명 추출
-            file_name = os.path.basename(file_path)
+            file_name = os.path.basename(item_path)
 
             # 파일을 다운로드할 수 있는 버튼 제공
-            with open(file_path, 'rb') as file:
+            with open(item_path, 'rb') as file:
                 st.download_button(
                     label=f"{file_name}",
                     data=file,
