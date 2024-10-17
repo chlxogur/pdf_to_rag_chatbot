@@ -10,7 +10,6 @@ import shutil
 import time
 
 default_file_names = ["연결 재무상태표.xlsx", "연결 손익계산서.xlsx", "연결 포괄손익계산서.xlsx"]
-SESSION_TIMEOUT = 600   # 10분이 지나면 세션종료
 OLD_FOLDER_LIFETIME = 60 * 6   # 변경된지 6시간이 지나면 폴더 삭제
 
 col = list()
@@ -19,17 +18,6 @@ def update_db(session_id = "initial"):
     st.session_state.messages = []
     st.session_state.db = make_db(session_id)
     
-def cleanup_session():
-    current_time = time.time()
-    if 'last_access' in st.session_state:
-        last_access = st.session_state['last_access']
-        if current_time - last_access > SESSION_TIMEOUT:
-            # 타임아웃이 지나면 DB 파일 삭제
-            if os.path.exists(os.path.join(DATA_PATH, st.session_state.session_id)):
-                shutil.rmtree(os.path.join(DATA_PATH, st.session_state.session_id))
-                st.write("세션 타임아웃으로 인해 DB 파일이 삭제되었습니다.")
-                st.session_state.clear()  # 세션 상태 초기화
-
 def cleanup_old_folders():
     current_time = time.time()
     for folder_name in os.listdir(DATA_PATH):
@@ -37,7 +25,6 @@ def cleanup_old_folders():
         if folder_name != "initial" and current_time - last_modified > OLD_FOLDER_LIFETIME:
             shutil.rmtree(os.path.join(DATA_PATH, folder_name))
                 
-cleanup_session()
 cleanup_old_folders()
 
 st.title("표를 아는 챗봇")
@@ -52,7 +39,6 @@ if "session_id" not in st.session_state:
     st.session_state.db = load_db(st.session_state.session_id)
     st.session_state.file_names = [default_file_names]
     st.session_state.file_db_matched = True
-    st.session_state.last_access = time.time()
 
 uploaded_files = st.file_uploader("PDF 파일 업로드", type="pdf", accept_multiple_files=True)
 
@@ -66,7 +52,6 @@ if uploaded_files:
 if st.button("DB 새로고침"):
     update_db(st.session_state.session_id)
     st.session_state.file_db_matched = True
-    st.session_state.last_access = time.time()
 
 col[0:2] = st.columns(3)
     
@@ -98,4 +83,3 @@ if prompt := st.chat_input("입력"):
     with st.chat_message("assistant"):
         st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
-    st.session_state.last_access = time.time()
